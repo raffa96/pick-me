@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
+
+import { fetchPhotos } from "../redux/reducers/photosSlice";
 
 import { Box, Button, Container, InputWrapper, Stack } from "./styled";
 
@@ -9,29 +11,24 @@ import { ReactComponent as SearchIcon } from "../images/search-media.svg";
 const HomeBody = () => {
   const dispatch = useDispatch();
 
-  const photos = useSelector((state) => state.photos);
+  const { photos, error, loading, rateLimit } = useSelector(
+    (state) => state.photos
+  );
 
-  console.log(photos);
+  const [itemPerPage, setItemPerPage] = useState(12);
 
-  /* useEffect(() => {
-    const test = async () => {
-      try {
-        const response = await httpClient.get("photos");
-        console.log(response);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    test();
-  }, []); */
+  useEffect(() => {
+    dispatch(fetchPhotos("photos"));
+  }, [dispatch]);
 
   return (
     <Container size="fullWidth">
       <Container mt="96px">
         <Stack justify="space-between" align="end">
           <h4>Search your photos</h4>
-          <p style={{ color: "var(--gray-700)" }}>Requests: 50/50</p>
+          <p style={{ color: "var(--gray-700)" }}>
+            Requests Available: {rateLimit.remaining}/{rateLimit.total}
+          </p>
         </Stack>
 
         <Box mt="24px">
@@ -61,6 +58,42 @@ const HomeBody = () => {
             />
           </Stack>
         </Box>
+
+        <Container mt="72px">
+          <Stack direction="column" spacing="118px">
+            {!loading && !error.status && photos.length > 0 ? (
+              <p>Photos</p>
+            ) : !loading && error.status ? (
+              error.message && error.message.length > 0 ? (
+                error.message.join(" ")
+              ) : (
+                "Error"
+              )
+            ) : (
+              <h3>Loading...</h3>
+            )}
+
+            <Stack justify="flex-end">
+              <p style={{ color: "var(--gray-700)" }}>
+                Item per Page
+                <select
+                  value={itemPerPage}
+                  onChange={({ target }) => setItemPerPage(+target.value)}
+                >
+                  {Array.from({ length: 7 }, (_, index) => {
+                    return (index + 1) * 3;
+                  }).map((item) => {
+                    return (
+                      <option key={`option-${item}`} value={item}>
+                        {item}
+                      </option>
+                    );
+                  })}
+                </select>
+              </p>
+            </Stack>
+          </Stack>
+        </Container>
       </Container>
     </Container>
   );
