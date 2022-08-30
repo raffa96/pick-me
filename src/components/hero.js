@@ -6,7 +6,7 @@ import NFTImage from "../images/nft-img.png";
 import { ReactComponent as RightIcon } from "../images/right-arrow.svg";
 
 const CustomButton = styled(Button)`
-  padding-left: 0px;
+  padding-left: 0;
   svg {
     margin-left: 16px;
     & > * {
@@ -19,7 +19,7 @@ const CustomStack = styled(Stack)`
   @media screen and (max-width: 767px) {
     flex-direction: column;
     & > * {
-      margin-top: 0px;
+      margin-top: 0;
       margin-left: 24px;
     }
   }

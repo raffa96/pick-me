@@ -13,6 +13,18 @@ const initialState = {
     remaining: null,
     total: 50,
   },
+  search: {
+    path: "",
+    itemPerPage: null,
+    type: "",
+    query: "",
+  },
+  pagination: {
+    hasNextPage: null,
+    hasPrevPage: null,
+    totalPages: null,
+    currentPage: 1,
+  },
 };
 
 const photosSlice = createSlice({
@@ -29,10 +41,21 @@ const photosSlice = createSlice({
     saveData: (state, action) => {
       state.photos = action.payload;
     },
+    saveSearch: (state, action) => {
+      state.search = { ...action.payload };
+    },
     updateRateLimit: (state, action) => {
       state.rateLimit = {
         ...action.payload,
       };
+    },
+    updatePagination: (state, action) => {
+      state.pagination.hasNextPage = action.payload.hasNextPage;
+      state.pagination.hasPrevPage = action.payload.hasPrevPage;
+      state.pagination.totalPages = action.payload.totalPages;
+    },
+    updateCurrentPage: (state, action) => {
+      state.pagination.currentPage = action.payload;
     },
     catchError: (state, action) => {
       state.error.status = true;
@@ -50,19 +73,39 @@ const {
   startLoading,
   stopLoading,
   saveData,
+  saveSearch,
   updateRateLimit,
+  updatePagination,
+  updateCurrentPage,
   catchError,
   cleanError,
 } = photosSlice.actions;
 
-const photosReducer = photosSlice.reducer;
+export { cleanError, catchError, saveSearch, updateCurrentPage };
 
-export const fetchPhotos = (path) => async (dispatch) => {
+export const fetchData = (path) => async (dispatch, getState) => {
   dispatch(startLoading());
   dispatch(cleanError());
   try {
     const response = await httpClient.get(path);
-    dispatch(saveData(response.data));
+    if (response && response.data && response.data.results) {
+      const results = response.data.results;
+      const totalPages = response.data.total_pages;
+      const { currentPage } = getState().photos.pagination;
+      const paginationInfo = {
+        hasPrevPage: currentPage > 1,
+        hasNextPage: currentPage + 1 <= totalPages,
+        totalPages,
+      };
+      if (results.length === 0) {
+        dispatch(catchError(["No results found"]));
+      }
+      dispatch(saveData(results));
+      dispatch(updatePagination(paginationInfo));
+    } else {
+      dispatch(saveData(response.data));
+    }
+
     dispatch(
       updateRateLimit({
         total: response.headers["x-ratelimit-limit"],
@@ -74,5 +117,7 @@ export const fetchPhotos = (path) => async (dispatch) => {
   }
   dispatch(stopLoading());
 };
+
+const photosReducer = photosSlice.reducer;
 
 export default photosReducer;

@@ -2,24 +2,69 @@ import { useEffect, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { fetchPhotos } from "../redux/reducers/photosSlice";
+import {
+  fetchData,
+  saveSearch,
+  updateCurrentPage,
+  catchError,
+} from "../redux/reducers/photosSlice";
+import { rowalizer } from "../utils/helpers";
 
 import { Box, Button, Container, InputWrapper, Stack } from "./styled";
+import PhotoSection from "./photo-section";
 
 import { ReactComponent as SearchIcon } from "../images/search-media.svg";
+import Paginator from "./paginator";
 
 const HomeBody = () => {
   const dispatch = useDispatch();
 
-  const { photos, error, loading, rateLimit } = useSelector(
+  const { photos, error, loading, rateLimit, search } = useSelector(
     (state) => state.photos
   );
 
-  const [itemPerPage, setItemPerPage] = useState(12);
+  const [itemPerPage, setItemPerPage] = useState(search.itemPerPage || 12);
+
+  const [query, setQuery] = useState(search.query || "");
+
+  const fetchPhotos = (type = "latest", page = 1) => {
+    let apiURL = null;
+
+    if (type === "search") {
+      if (query && query.trim().length > 1 && query !== " ") {
+        apiURL = `search/photos?query=${query}&`;
+      } else {
+        dispatch(catchError(["Please enter a valid search query"]));
+        return;
+      }
+    } else {
+      apiURL = "photos?";
+    }
+
+    dispatch(updateCurrentPage(page));
+
+    dispatch(fetchData(`${apiURL}page=${page}&per_page=${itemPerPage}`));
+
+    dispatch(
+      saveSearch({
+        path: apiURL.trim(),
+        itemPerPage,
+        type,
+        query,
+      })
+    );
+  };
+
+  const searchPhotos = () => fetchPhotos("search");
 
   useEffect(() => {
-    dispatch(fetchPhotos("photos"));
-  }, [dispatch]);
+    if (!search.query) {
+      fetchPhotos();
+    } else {
+      fetchPhotos(search.type);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemPerPage]);
 
   return (
     <Container size="fullWidth">
@@ -37,16 +82,16 @@ const HomeBody = () => {
             bg="gray.900"
             borderRadius="100px"
             border="1px solid"
-            borderColor={"gray.700"}
+            borderColor={error.status ? "error" : "gray.700"}
             px="18px"
             style={{ overflowX: "hidden" }}
           >
             <InputWrapper
               placeholder="Search photo"
               border="none"
-              pl="0px"
-              value="React"
-              onChange={() => console.log("Searching photo...")}
+              pl="0"
+              value={query}
+              onChange={({ target }) => setQuery(target.value)}
             />
             <Button
               rightIcon={<SearchIcon />}
@@ -55,6 +100,7 @@ const HomeBody = () => {
               variant="text"
               iconColor="gray.700"
               bg="gray.900"
+              onClick={() => searchPhotos()}
             />
           </Stack>
         </Box>
@@ -62,7 +108,11 @@ const HomeBody = () => {
         <Container mt="72px">
           <Stack direction="column" spacing="118px">
             {!loading && !error.status && photos.length > 0 ? (
-              <p>Photos</p>
+              rowalizer(photos).map((row, index) => {
+                return (
+                  <PhotoSection key={`photos-section-${index}`} row={row} />
+                );
+              })
             ) : !loading && error.status ? (
               error.message && error.message.length > 0 ? (
                 error.message.join(" ")
@@ -94,6 +144,7 @@ const HomeBody = () => {
             </Stack>
           </Stack>
         </Container>
+        <Paginator />
       </Container>
     </Container>
   );
