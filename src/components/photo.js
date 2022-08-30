@@ -5,6 +5,8 @@ import styled from "styled-components";
 import { Box, Button, Skeleton, Stack } from "./styled";
 
 import { ReactComponent as ColoredCart } from "../images/purple-cart.svg";
+import { addSingleItemToCart } from "../redux/reducers/cartSlice";
+import { useDispatch } from "react-redux";
 
 const Card = styled(Box)`
   &:hover {
@@ -27,6 +29,8 @@ const Card = styled(Box)`
 `;
 
 const Photo = ({ alt_description, urls: { full }, likes, id }) => {
+  const dispatch = useDispatch();
+
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -45,7 +49,7 @@ const Photo = ({ alt_description, urls: { full }, likes, id }) => {
           alt={alt_description}
           width="100%"
           height="100%"
-          style={{ display: loaded ? "block" : "none" }}
+          style={{ display: loaded ? "block" : "none", objectFit: "cover" }}
           onLoad={() => setLoaded(true)}
         />
         <Skeleton
@@ -74,6 +78,11 @@ const Photo = ({ alt_description, urls: { full }, likes, id }) => {
             variant="text"
             rightIcon={<ColoredCart />}
             iconColor="purple.300"
+            onClick={() =>
+              dispatch(
+                addSingleItemToCart({ id, likes, url: full, alt_description })
+              )
+            }
           />
         </Stack>
       </Box>

@@ -6,3 +6,16 @@ export const rowalizer = (items, items_per_row = 3) => {
     return items.slice(start, end);
   });
 };
+
+export const getItemFromLocalStorage = (key) => {
+  if (localStorage.getItem(key)) {
+    return JSON.parse(localStorage.getItem(key));
+  }
+  return null;
+};
+
+export const setItemToLocalStorage = (key, value) => {
+  if (value && typeof key === "string") {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+};

@@ -1,6 +1,20 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAction } from "@reduxjs/toolkit";
 
+import {
+  getItemFromLocalStorage,
+  setItemToLocalStorage,
+} from "../../utils/helpers";
 import httpClient from "../../api";
+
+const isSaveSearch = (action) => action.type.endsWith("/saveSearch");
+
+const path = getItemFromLocalStorage("search")?.path || "";
+
+const itemPerPage = getItemFromLocalStorage("search")?.itemPerPage || null;
+
+const type = getItemFromLocalStorage("search")?.type || "";
+
+const query = getItemFromLocalStorage("search")?.query || "";
 
 const initialState = {
   isLoading: true,
@@ -14,10 +28,10 @@ const initialState = {
     total: 50,
   },
   search: {
-    path: "",
-    itemPerPage: null,
-    type: "",
-    query: "",
+    path,
+    itemPerPage,
+    type,
+    query,
   },
   pagination: {
     hasNextPage: null,
@@ -66,6 +80,11 @@ const photosSlice = createSlice({
       state.error.status = false;
       state.error.message = "";
     },
+  },
+  extraReducers: (builder) => {
+    builder.addMatcher(isSaveSearch, (state) => {
+      setItemToLocalStorage("search", state.search);
+    });
   },
 });
 
