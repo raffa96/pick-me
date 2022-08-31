@@ -2,6 +2,11 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { cleanCart, removeFromCart } from "../redux/reducers/cartSlice";
 
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import { RiDeleteBack2Fill } from "react-icons/ri";
+
 import Layout from "../components/layout";
 import {
   Box,
@@ -11,12 +16,47 @@ import {
   Stack,
 } from "../components/styled";
 
-import { ReactComponent as DeleteBackIcon } from "../images/small-right-arrow.svg";
-
 const Checkout = () => {
   const { cart, total } = useSelector((state) => state.cart);
 
   const dispatch = useDispatch();
+
+  const initialValues = {
+    firstName: "",
+    lastName: "",
+    creditCard: "",
+    address: "",
+    civic: "",
+    zip: "",
+  };
+
+  const validationSchema = Yup.object({
+    firstName: Yup.string()
+      .min(4, "Too short! You must enter at least 4 characters.")
+      .max(40, "Too long! You must enter at most 40 characters.")
+      .required("firstName is required!"),
+    lastName: Yup.string()
+      .min(4, "Too short! You must enter at least 4 characters.")
+      .max(40, "Too long! You must enter at most 40 characters.")
+      .required("lastName is required!"),
+    creditCard: Yup.string()
+      .min(16, "Too short! You must enter at least 16 characters.")
+      .max(16, "Too long! You must enter at most 16 characters.")
+      .required("creditCard is required!"),
+    address: Yup.string()
+      .min(10, "Too short! You must enter at least 10 characters.")
+      .max(60, "Too long! You must enter at most 60 characters.")
+      .required("address is required!"),
+    civic: Yup.number()
+      .max(9999, "Can't be greater than 9999")
+      .positive("You must enter a positive number.")
+      .moreThan(0, "You must enter a positive number.")
+      .required("civic is required!"),
+    zip: Yup.string()
+      .min(5, "Too short! You must enter at least 5 characters.")
+      .max(5, "Too long! You must enter at most 5 characters.")
+      .required("zip is required!"),
+  });
 
   return (
     <Layout>
@@ -82,7 +122,7 @@ const Checkout = () => {
                         <Button
                           variant="text"
                           size="md"
-                          rightIcon={<DeleteBackIcon size={24} />}
+                          rightIcon={<RiDeleteBack2Fill size={24} />}
                           iconColor="purple.300"
                           onClick={() => dispatch(removeFromCart(item))}
                         />
@@ -108,26 +148,226 @@ const Checkout = () => {
                 <h3>Payment data</h3>
               </Box>
 
-              <form>
-                <Stack direction="column" spacing="36px">
-                  <Stack justify="space-between" align="center">
-                    <InputWrapper width="200px" placeholder="First Name" />
-                    <InputWrapper width="200px" placeholder="Last Name" />
-                  </Stack>
-                  <InputWrapper placeholder="Credit Card" />
-                  <Stack spacing="10px" align="center">
-                    <InputWrapper width="200px" placeholder="Address" />
-                    <InputWrapper width="100px" placeholder="Civic" />
-                    <InputWrapper width="100px" placeholder="Zip" />
-                  </Stack>
-                  <Stack justify="space-between" align="center">
-                    <h4>{total} €</h4>
-                    <Button type="submit" variant="contained" size="md">
-                      Proceed to purchase
-                    </Button>
-                  </Stack>
-                </Stack>
-              </form>
+              <Formik
+                initialValues={initialValues}
+                validationSchema={validationSchema}
+                onSubmit={(values, { setSubmitting }) => {
+                  setSubmitting(true);
+                  setTimeout(() => {
+                    alert(JSON.stringify(values));
+                    setSubmitting(false);
+                  }, 1000);
+                }}
+              >
+                {({
+                  values,
+                  errors,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  isSubmitting,
+                  isValid,
+                  touched,
+                  dirty,
+                }) => (
+                  <form onSubmit={handleSubmit}>
+                    <Stack direction="column" spacing="36px">
+                      <Stack justify="space-between" align="center">
+                        <Box>
+                          <InputWrapper
+                            width="200px"
+                            id="firstName"
+                            name="firstName"
+                            value={values.firstName}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            borderColor={
+                              errors.firstName ? "var(--error)" : "initial"
+                            }
+                            placeholder="First Name"
+                          />
+                          {touched.firstName && errors.firstName ? (
+                            <p
+                              style={{
+                                color: "var(--error)",
+                                marginTop: "6px",
+                                fontSize: "8px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {errors.firstName}
+                            </p>
+                          ) : (
+                            <div style={{ height: "8px" }}></div>
+                          )}
+                        </Box>
+
+                        <Box>
+                          <InputWrapper
+                            width="200px"
+                            id="lastName"
+                            name="lastName"
+                            value={values.lastName}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            borderColor={
+                              errors.lastName ? "var(--error)" : "initial"
+                            }
+                            placeholder="Last Name"
+                          />
+                          {touched.lastName && errors.lastName ? (
+                            <p
+                              style={{
+                                color: "var(--error)",
+                                marginTop: "6px",
+                                fontSize: "8px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {errors.lastName}
+                            </p>
+                          ) : (
+                            <div style={{ height: "8px" }}></div>
+                          )}
+                        </Box>
+                      </Stack>
+
+                      <Box width="100%">
+                        <InputWrapper
+                          width="100%"
+                          id="creditCard"
+                          name="creditCard"
+                          value={values.creditCard}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          borderColor={
+                            errors.creditCard ? "var(--error)" : "initial"
+                          }
+                          placeholder="Credit Card"
+                        />
+                        {touched.creditCard && errors.creditCard ? (
+                          <p
+                            style={{
+                              color: "var(--error)",
+                              marginTop: "6px",
+                              fontSize: "8px",
+                              textAlign: "right",
+                            }}
+                          >
+                            {errors.creditCard}
+                          </p>
+                        ) : (
+                          <div style={{ height: "8px" }}></div>
+                        )}
+                      </Box>
+
+                      <Stack spacing="10px" align="center">
+                        <Box>
+                          <InputWrapper
+                            width="200px"
+                            id="address"
+                            name="address"
+                            value={values.address}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            borderColor={
+                              errors.address ? "var(--error)" : "initial"
+                            }
+                            placeholder="Address"
+                          />
+                          {touched.address && errors.address ? (
+                            <p
+                              style={{
+                                color: "var(--error)",
+                                marginTop: "6px",
+                                fontSize: "8px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {errors.address}
+                            </p>
+                          ) : (
+                            <div style={{ height: "8px" }}></div>
+                          )}
+                        </Box>
+
+                        <Box>
+                          <InputWrapper
+                            width="100px"
+                            id="civic"
+                            name="civic"
+                            value={values.civic}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            borderColor={
+                              errors.civic ? "var(--error)" : "initial"
+                            }
+                            placeholder="Civic"
+                          />
+                          {touched.civic && errors.civic ? (
+                            <p
+                              style={{
+                                color: "var(--error)",
+                                marginTop: "6px",
+                                fontSize: "8px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {errors.civic}
+                            </p>
+                          ) : (
+                            <div style={{ height: "8px" }}></div>
+                          )}
+                        </Box>
+
+                        <Box>
+                          <InputWrapper
+                            width="100px"
+                            id="zip"
+                            name="zip"
+                            value={values.zip}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            borderColor={
+                              errors.zip ? "var(--error)" : "initial"
+                            }
+                            placeholder="Zip"
+                          />
+                          {touched.zip && errors.zip ? (
+                            <p
+                              style={{
+                                color: "var(--error)",
+                                marginTop: "6px",
+                                fontSize: "8px",
+                                textAlign: "right",
+                              }}
+                            >
+                              {errors.zip}
+                            </p>
+                          ) : (
+                            <div style={{ height: "8px" }}></div>
+                          )}
+                        </Box>
+                      </Stack>
+                      <Stack justify="space-between" align="center">
+                        <h2>{total} €</h2>
+                        <Button
+                          type="submit"
+                          variant={
+                            isSubmitting || !isValid || !dirty
+                              ? "disabled"
+                              : "contained"
+                          }
+                          size="md"
+                          disabled={isSubmitting}
+                        >
+                          Proceed to purchase
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </form>
+                )}
+              </Formik>
             </Box>
           </Stack>
         </Container>
